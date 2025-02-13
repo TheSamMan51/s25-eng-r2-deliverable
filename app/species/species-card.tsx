@@ -10,24 +10,37 @@ on the client-side to correctly match component state and props should the order
 React server components don't track state between rerenders, so leaving the uniquely identified components (e.g. SpeciesCard)
 can cause errors with matching props and state in child components if the list order changes.
 */
-import { Button } from "@/components/ui/button";
+
+
+import EditSpeciesDialog from "@/app/species/edit-species-dialog";
+import SpeciesDetailsDialog from "@/app/species/species-details-dialog";
 import type { Database } from "@/lib/schema";
 import Image from "next/image";
+
 type Species = Database["public"]["Tables"]["species"]["Row"];
 
-export default function SpeciesCard({ species }: { species: Species }) {
+export default function SpeciesCard({ species, userId }: { species: Species; userId: string }) {
   return (
     <div className="m-4 w-72 min-w-72 flex-none rounded border-2 p-3 shadow">
-      {species.image && (
+      {species.image ? (
         <div className="relative h-40 w-full">
           <Image src={species.image} alt={species.scientific_name} fill style={{ objectFit: "cover" }} />
+        </div>
+      ) : (
+        <div className="relative flex h-40 w-full items-center justify-center bg-gray-200">
+          <span className="text-gray-500">No image available</span>
         </div>
       )}
       <h3 className="mt-3 text-2xl font-semibold">{species.scientific_name}</h3>
       <h4 className="text-lg font-light italic">{species.common_name}</h4>
       <p>{species.description ? species.description.slice(0, 150).trim() + "..." : ""}</p>
-      {/* Replace the button with the detailed view dialog. */}
-      <Button className="mt-3 w-full">Learn More</Button>
+      <div className="mt-4 flex gap-2">
+        <SpeciesDetailsDialog species={species} />
+        {/* Only show edit button if the user is the author */}
+        {species.author === userId && (
+          <EditSpeciesDialog species={species} />
+        )}
+      </div>
     </div>
   );
 }
